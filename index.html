@@ -275,7 +275,7 @@ mark { background: #f3dcb2; color: inherit; border-radius: 3px; padding: 0 1px; 
 
 <section class="mission" id="mission" hidden aria-live="polite"></section>
 
-<div class="route-legend" id="route-legend" hidden aria-hidden="true"><span><i></i>遷村路線</span><span><i class="rel"></i>搬遷關係（沒有路線紀錄）</span></div>
+<div class="route-legend" id="route-legend" hidden aria-hidden="true"><span><i></i>遷村路線</span><span><i class="rel"></i>搬遷關係（實際遷徙路徑尚未找到）</span></div>
 <div class="arrive" id="arrive" hidden></div>
 <div class="modal" id="story-modal" hidden></div>
 <div class="modal" id="result-modal" hidden></div>
@@ -600,6 +600,7 @@ async function win(t, el) {
   const arrive = $('arrive');
   arrive.innerHTML = `<h2>抵達！</h2><p>${esc(t.id)} → ${esc(t.answer)}</p>`
     + (part ? `<div class="names">${markPart(t.name, part)} → ${markPart(v.plate, part)}</div>` : '')
+    + (routes[t.key] ? '' : '<p style="font-size:14px;font-weight:500">點狀弧線：實際遷徙路徑尚未找到</p>')
     + `<div class="stars">${[0, 1, 2].map(i => `<span class="${i < earned ? '' : 'lost'}" style="animation-delay:${.15 + i * .18}s">★</span>`).join('')}</div>`;
   arrive.hidden = false;
   $('score').classList.remove('bump'); void $('score').offsetWidth; $('score').classList.add('bump');
@@ -622,7 +623,7 @@ function showStory(t, earned, inGame, onClose) {
       <p class="text">${esc(t.info)}</p>
       ${part ? `<div class="carry">名字跟著族人搬下山：<strong>${markPart(t.name, part)}</strong> → <strong>${markPart(v.plate, part)}</strong></div>` : ''}
       <div class="move"><b>後來搬到 ${esc(t.answer)}（${esc(v.oldName)}）</b><p>${esc(v.info)}</p></div>
-      <p class="note">${routes[t.key] ? '地圖上的路線依遷村路線圖繪製。' : '這組沒有遷村路線的紀錄，地圖上的點狀弧線只表示「從這裡搬到那裡」，不是實際走過的路。'}</p>
+      <p class="note">${routes[t.key] ? '地圖上的路線依遷村路線圖繪製。' : '目前還沒有找到這組的實際遷徙路徑，地圖上的點狀弧線只表示「從這裡搬到那裡」，不是族人實際走過的路。'}</p>
       <div class="actions"><button type="button" class="btn-main" id="story-next">${inGame ? (last ? '看結算 →' : '收進收藏冊，前往下一站 →') : '關閉'}</button></div>
     </div></article>`;
   modal.hidden = false;
