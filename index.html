@@ -504,7 +504,7 @@ function renderMission(enter, toast = '') {
   let body;
   if (t.mode === 'name') {
     body = `<div class="nameplate"><small>族語名</small><strong>${esc(t.name)}</strong></div>
-      <p class="task">🔗 名字連連看！<br>哪塊<em>藍色門牌</em>跟它長得最像？點下去就對了！</p>`;
+      <p class="task">🔗 名字連連看！<br>找出族語名拼法最接近的<em>村落</em>，把它們連起來！</p>`;
   } else {
     const v = state.viewing && VILLAGES[state.viewing];
     const r = state.viewing ? roster(state.viewing) : [];
