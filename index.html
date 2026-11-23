@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>舊部落找新家｜南澳遷徙小遊戲</title>
+<meta name="description" content="點選舊部落、讀它的故事，再到地圖上幫族人找到山下的新家。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.6.1/dist/maplibre-gl.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.6.1/dist/maplibre-gl.js"></script>
+<style>
+:root {
+  --paper: #f3f1e9;
+  --card: #fbf8ee;
+  --ink: #435348;
+  --ink-2: #5e6a5f;
+  --muted: #8a9184;
+  --line: rgba(67,83,72,.16);
+  --accent: #b27745;
+  --old: #a8743f;
+  --current: #3f82a6;
+  --ok: #5f9a4c;
+  --serif: 'Noto Serif TC', 'Songti TC', serif;
+  --sans: 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { background: var(--paper); color: var(--ink); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; cursor: pointer; background: none; border: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+h1, h2, h3, p { margin: 0; }
+
+.app { display: grid; grid-template-columns: minmax(360px, 420px) 1fr; height: 100svh; }
+.panel { position: relative; z-index: 2; display: flex; flex-direction: column; min-height: 0; background: var(--paper); border-right: 1px solid var(--line); }
+.panel-head { padding: 28px 28px 18px; border-bottom: 1px solid var(--line); }
+.eyebrow { font-size: 11px; letter-spacing: .2em; color: var(--muted); }
+.panel-head h1 { margin-top: 10px; font: 500 28px/1.35 var(--serif); letter-spacing: .06em; }
+.panel-head p { margin-top: 10px; font-size: 14px; line-height: 1.8; color: var(--ink-2); }
+.progress { margin-top: 16px; display: flex; align-items: center; gap: 12px; font-size: 12px; letter-spacing: .08em; color: var(--ink-2); }
+.progress-track { flex: 1; height: 4px; border-radius: 4px; background: #dfe3d8; overflow: hidden; }
+.progress-track i { display: block; height: 100%; width: 0; background: var(--ok); border-radius: inherit; transition: width .5s ease; }
+.panel-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 18px 20px 28px; }
+
+/* 舊部落卡片清單 */
+.list { display: grid; gap: 10px; }
+.tribe { display: grid; grid-template-columns: 56px 1fr auto; align-items: center; gap: 14px; width: 100%; padding: 10px 14px 10px 10px; text-align: left; background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 4px 14px rgba(40,55,45,.05); transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+.tribe:hover { transform: translateY(-1px); box-shadow: 0 8px 22px rgba(40,55,45,.1); }
+.tribe img { width: 56px; height: 56px; object-fit: cover; border-radius: 10px; background: #e3e6dc; }
+.tribe b { display: block; font: 500 17px/1.3 var(--serif); letter-spacing: .04em; }
+.tribe small { display: block; margin-top: 3px; font-size: 12px; color: var(--muted); letter-spacing: .03em; }
+.tribe .state { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.tribe.solved { background: #eef3ea; border-color: rgba(95,154,76,.3); }
+.tribe.solved .state { color: var(--ok); font-weight: 600; }
+
+/* 故事卡 */
+.story { display: none; }
+.story.is-open { display: block; animation: rise .35s ease; }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.back { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 14px; padding: 7px 14px; font-size: 13px; color: var(--ink-2); border: 1px solid var(--line); border-radius: 999px; background: var(--card); }
+.back:hover { background: #e6ebe2; }
+.story-photo { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; border-radius: 14px; background: #e3e6dc; display: block; }
+.story-tag { display: inline-block; margin-top: 16px; padding: 3px 10px; font-size: 11px; letter-spacing: .14em; color: #fbf8ee; background: var(--old); border-radius: 999px; }
+.story h2 { margin-top: 10px; font: 500 26px/1.35 var(--serif); letter-spacing: .05em; }
+.story .old-name { margin-top: 4px; font-size: 13px; color: var(--muted); letter-spacing: .04em; }
+.story .text { margin-top: 14px; font: 400 16px/1.95 var(--serif); color: var(--ink); letter-spacing: .02em; }
+.ask { margin-top: 20px; padding: 14px 16px; border-radius: 12px; background: #e9eee5; font-size: 14px; line-height: 1.7; color: var(--ink); }
+.ask strong { font-weight: 600; }
+.feedback { margin-top: 12px; padding: 14px 16px; border-radius: 12px; background: #f6eee3; border: 1px solid rgba(178,119,69,.25); font-size: 14px; line-height: 1.8; color: #6b4d31; display: none; }
+.feedback.is-on { display: block; animation: rise .3s ease; }
+.feedback b { color: #8a5a2f; }
+.shake { animation: shake .42s ease; }
+@keyframes shake { 0%,100% { transform: none; } 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(3px); } }
+
+.after { display: none; margin-top: 22px; padding-top: 20px; border-top: 1px dashed rgba(67,83,72,.28); }
+.after.is-on { display: block; animation: rise .45s ease; }
+.after .story-tag { margin-top: 0; background: var(--current); }
+.after h3 { margin-top: 10px; font: 500 22px/1.35 var(--serif); letter-spacing: .05em; }
+.after .route-note { margin-top: 6px; font-size: 12px; color: var(--muted); }
+.next { margin-top: 20px; display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; border-radius: 999px; background: var(--ink); color: #fbf8ee; font-size: 15px; letter-spacing: .06em; box-shadow: 0 8px 20px rgba(40,55,45,.16); transition: background .2s ease, transform .2s ease; }
+.next:hover { background: #34433a; transform: translateY(-1px); }
+
+/* 地圖 */
+.map-wrap { position: relative; min-height: 0; }
+#map { position: absolute; inset: 0; background: #dce5e3; }
+.map-tip { position: absolute; left: 50%; top: 20px; transform: translateX(-50%); z-index: 3; padding: 10px 18px; font-size: 14px; letter-spacing: .04em; color: var(--ink); background: rgba(251,248,238,.95); border: 1px solid var(--line); border-radius: 999px; box-shadow: 0 8px 22px rgba(40,55,45,.1); white-space: nowrap; transition: opacity .3s ease; pointer-events: none; }
+.legend { position: absolute; left: 18px; bottom: 18px; z-index: 3; display: flex; gap: 14px; padding: 8px 14px; font-size: 12px; color: var(--ink-2); background: rgba(251,248,238,.92); border: 1px solid var(--line); border-radius: 999px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+/* 地圖標記 */
+/* 不能設 position，否則會蓋掉 MapLibre 標記的絕對定位，點會偏離真實座標 */
+.village { width: 22px; height: 22px; }
+.village span { position: absolute; left: 50%; top: calc(100% + 4px); transform: translateX(-50%); }
+.village.lbl-left span { left: auto; right: calc(100% + 6px); top: 50%; transform: translateY(-50%); }
+.village.lbl-up span { top: auto; bottom: calc(100% + 4px); }
+.village.lbl-right span { left: calc(100% + 6px); top: 50%; transform: translateY(-50%); }
+.village i { display: block; width: 22px; height: 22px; border-radius: 50%; background: var(--current); border: 2px solid #fbf8ee; box-shadow: 0 0 0 5px rgba(63,130,166,.2); transition: transform .2s ease, box-shadow .2s ease; }
+.village span { padding: 3px 9px; font: 500 13px/1.3 var(--serif); letter-spacing: .06em; color: var(--ink); background: rgba(251,248,238,.94); border-radius: 999px; box-shadow: 0 2px 8px rgba(40,55,45,.12); white-space: nowrap; }
+.village:hover i, .village:focus-visible i { transform: scale(1.18); box-shadow: 0 0 0 7px rgba(63,130,166,.28); }
+.village.is-picking i { animation: breathe 1.8s ease-in-out infinite; }
+.village.is-wrong i, .village.is-wrong span { animation: shake .42s ease; }
+.village.is-wrong i { background: #b85a48; box-shadow: 0 0 0 6px rgba(184,90,72,.25); }
+.village.is-correct i { background: var(--ok); box-shadow: 0 0 0 8px rgba(95,154,76,.28); }
+.village.is-hint i { box-shadow: 0 0 0 10px rgba(178,119,69,.35); animation: hint 1.1s ease-in-out infinite; }
+@keyframes breathe { 0%,100% { box-shadow: 0 0 0 5px rgba(63,130,166,.2); } 50% { box-shadow: 0 0 0 9px rgba(63,130,166,.12); } }
+@keyframes hint { 0%,100% { transform: scale(1); } 50% { transform: scale(1.3); } }
+.old-dot { width: 15px; height: 15px; pointer-events: none; }
+.old-dot span { position: absolute; left: 50%; top: calc(100% + 3px); transform: translateX(-50%); }
+.old-dot.lbl-left span { left: auto; right: calc(100% + 5px); top: 50%; transform: translateY(-50%); }
+.old-dot.lbl-right span { left: calc(100% + 5px); top: 50%; transform: translateY(-50%); }
+.old-dot.lbl-up span { top: auto; bottom: calc(100% + 3px); }
+.old-dot i { display: block; width: 15px; height: 15px; border-radius: 50%; background: var(--old); border: 2px solid #fbf8ee; opacity: .75; transition: transform .25s ease, opacity .25s ease; }
+.old-dot span { font: 500 12px/1.3 var(--serif); letter-spacing: .05em; color: #6b4d31; background: rgba(251,248,238,.94); padding: 2px 8px; border-radius: 999px; opacity: 0; transition: opacity .25s ease; white-space: nowrap; }
+.old-dot.is-active i { transform: scale(1.5); opacity: 1; box-shadow: 0 0 0 6px rgba(168,116,63,.25); }
+.old-dot.is-active span, .old-dot.is-solved span { opacity: 1; }
+.old-dot.is-solved i { opacity: 1; }
+
+/* 完成畫面 */
+.finish { position: fixed; inset: 0; z-index: 20; display: none; align-items: center; justify-content: center; padding: 16px; background: rgba(40,55,45,.38); backdrop-filter: blur(3px); }
+.finish.is-on { display: flex; animation: rise .4s ease; }
+.finish-card { width: min(520px, 100%); max-height: calc(100svh - 32px); overflow-y: auto; padding: 34px 32px 30px; text-align: center; background: var(--card); border-radius: 18px; box-shadow: 0 24px 60px rgba(40,55,45,.25); }
+.finish-card h2 { margin-top: 12px; font: 500 28px/1.4 var(--serif); letter-spacing: .06em; }
+.finish-card p { margin-top: 14px; font: 400 16px/1.95 var(--serif); color: var(--ink-2); }
+.finish-list { margin: 20px 0 0; padding: 0; list-style: none; display: grid; gap: 6px; text-align: left; font-size: 14px; color: var(--ink-2); }
+.finish-list li { display: flex; justify-content: space-between; gap: 12px; padding: 8px 12px; background: #eef1ea; border-radius: 9px; }
+.finish-list li b { font-weight: 500; color: var(--ink); }
+.finish-actions { margin-top: 24px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.ghost { display: inline-flex; align-items: center; padding: 12px 22px; border-radius: 999px; border: 1px solid var(--line); background: var(--paper); font-size: 15px; letter-spacing: .06em; }
+.ghost:hover { background: #e6ebe2; }
+
+.maplibregl-ctrl-attrib { font-size: 10px !important; background: rgba(243,241,233,.7) !important; }
+
+/* 手機：地圖在上、故事在下 */
+@media (max-width: 760px) {
+  .app { grid-template-columns: 1fr; grid-template-rows: 44svh 1fr; }
+  .map-wrap { grid-row: 1; }
+  .panel { grid-row: 2; border-right: 0; border-top: 1px solid var(--line); box-shadow: 0 -8px 24px rgba(40,55,45,.08); }
+  .panel-head { padding: 16px 16px 12px; }
+  .panel-head h1 { margin-top: 6px; font-size: 22px; }
+  .panel-head p { display: none; }
+  .progress { margin-top: 10px; }
+  .panel-body { padding: 14px 16px 24px; }
+  .map-tip { top: 10px; max-width: calc(100% - 32px); white-space: normal; text-align: center; font-size: 13px; border-radius: 14px; }
+  .legend { left: 10px; bottom: 34px; font-size: 11px; gap: 10px; padding: 6px 10px; }
+  .story h2 { font-size: 23px; }
+  .story-photo { aspect-ratio: 16 / 9; }
+  .village span { font-size: 12px; }
+  .finish-card { padding: 28px 20px 24px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="panel" aria-label="遊戲說明與故事">
+    <header class="panel-head">
+      <div class="eyebrow">南澳虛擬博物館 · 遷徙小遊戲</div>
+      <h1>舊部落找新家</h1>
+      <p>這些山裡的舊部落，族人後來搬到了山下哪個村落？先點一個舊部落讀它的故事，再到地圖上找出它的新家。</p>
+      <div class="progress"><span id="progress-text">0 / 8 個部落找到新家</span><div class="progress-track"><i id="progress-bar"></i></div></div>
+    </header>
+    <div class="panel-body" id="panel-body">
+      <div class="list" id="list" role="list"></div>
+      <article class="story" id="story" aria-live="polite">
+        <button type="button" class="back" id="back">← 回到部落清單</button>
+        <img class="story-photo" id="story-photo" alt="">
+        <span class="story-tag">舊部落</span>
+        <h2 id="story-name"></h2>
+        <p class="old-name" id="story-old"></p>
+        <p class="text" id="story-text"></p>
+        <div class="ask" id="ask"><strong>族人後來搬到了哪裡？</strong><br>在地圖上點選一個藍色的現今村落。</div>
+        <div class="feedback" id="feedback" role="status"></div>
+        <section class="after" id="after">
+          <span class="story-tag">搬到山下之後</span>
+          <h3 id="after-name"></h3>
+          <p class="text" id="after-text"></p>
+          <p class="route-note" id="route-note"></p>
+          <button type="button" class="next" id="next">下一個部落 →</button>
+        </section>
+      </article>
+    </div>
+  </aside>
+  <main class="map-wrap">
+    <div id="map" aria-label="南澳舊部落與現今村落地圖"></div>
+    <div class="map-tip" id="map-tip">先從左邊選一個舊部落</div>
+    <div class="legend" aria-hidden="true"><span><i style="background:var(--old)"></i>舊部落</span><span><i style="background:var(--current)"></i>現今村落</span></div>
+  </main>
+</div>
+
+<div class="finish" id="finish" role="dialog" aria-modal="true" aria-labelledby="finish-title">
+  <div class="finish-card">
+    <div class="eyebrow">8 / 8 完成</div>
+    <h2 id="finish-title">每個舊部落都找到新家了</h2>
+    <p>南澳泰雅族人從和平溪、和平北溪一帶的山區舊部落，一步步遷到山下的村落。直到今天，族人仍會回到舊社尋根，舊部落的名字也留在村落的族語名裡。</p>
+    <ul class="finish-list" id="finish-list"></ul>
+    <div class="finish-actions">
+      <button type="button" class="ghost" id="view-map">看完整遷徙地圖</button>
+      <button type="button" class="next" id="replay">再玩一次</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── 資料：全部取自南澳虛擬博物館（migration-places.json、continuation.js 的 relations、knowledgeGraph.js） ───
+// 只收博物館裡有出處的 8 組「舊部落 → 現今村落」，不自行推測其他配對。東岳村沒有對照資料，作為干擾選項。
+const VILLAGES = {
+  金岳村: { lon: 121.77785, lat: 24.47123, oldName: 'Ryohen／流興社', info: '位於南澳北溪流域，主要居民與山區舊部落流興社（Ryohen／Ryuhing）關係密切。直到今天，族人仍會返回流興舊社尋根。' },
+  武塔村: { lon: 121.7772, lat: 24.44335, oldName: 'Hagaparis 哈卡巴里斯', info: '位於南澳鄉中部，居民主要與舊武塔社及哈卡巴里斯等山區部落有歷史關係。這裡也是從平地進入南澳山區的重要位置，保留不少與祖居地、狩獵和山林生活相關的記憶。' },
+  金洋村: { lon: 121.75108, lat: 24.42495, oldName: 'Knyahan 金洋舊社', info: '位於南澳鄉南側、接近山區入口的位置，是進入和平北溪與舊金洋一帶的重要聚落。' },
+  碧侯村: { lon: 121.78601, lat: 24.47452, oldName: 'Pyahaw 比亞豪社', info: '又稱比亞豪部落，位於南澳北溪旁，以泰雅族人為主，擁有豐富自然資源與溫泉。' },
+  澳花村: { lon: 121.74304, lat: 24.33134, oldName: 'Kumuyaw／莫瑤社', info: '位於南澳鄉最南端、和平溪出海口附近，是南澳泰雅族主要聚落之一。村內族人的祖先來自莫瑤等山區舊社。' },
+  南澳村: { lon: 121.80336, lat: 24.4655, oldName: "Gong'ao", info: '位於南澳鄉中心的大南澳平原，是鄉公所、學校與主要公共設施集中的地方。村內聚集來自庫巴博（K’babaw）、各姆姆（Kngungu）等不同舊社的族人，是南澳鄉行政與生活機能的核心。' },
+  東岳村: { lon: 121.83224, lat: 24.51977, oldName: 'Iyo／Giyo 伊亞歐社', info: '位於南澳鄉最北端的東澳溪流域，是南澳泰雅族分布最北側的聚落之一。村落鄰近東澳灣與山區，生活空間同時連結山林、溪流與海岸。' },
+};
+
+const TRIBES = [
+  { id: 'Ryohen（流興）', key: 'ryohen', oldName: 'Ryohen／流興社', lon: 121.63211, lat: 24.44615, answer: '金岳村', photo: 'ryohen',
+    info: '金岳的舊部落，位於和平溪流域山區。因當地盛產一種植物而得名，是南澳群對外交通的樞紐，也曾是外部落的行政中心。',
+    hint: '新家位在南澳北溪流域，那裡的居民和流興社關係密切，族人至今仍會回到流興舊社尋根。' },
+  { id: '哈卡巴里斯', key: 'hagaparis', oldName: 'Hagaparis／Hkbalis', lon: 121.61432, lat: 24.4465, answer: '武塔村', photo: 'hagaparis',
+    info: '位於和平北溪流域，是族人祖先長期生活的重要聚落。位在銘山東方、與流興社隔溪相望，末代頭目哈勇帶族人七天徒步返此祖靈之地。地形陡峭多斷崖，耕地不多，相傳族人擅長疊石造梯田，最多可疊十幾層平台。',
+    hint: '新家位在南澳鄉中部，是從平地進入南澳山區的重要位置。那個村落的族語名，就叫 Hagaparis。' },
+  { id: '舊金洋', key: 'knyahan', oldName: 'Knyahan', lon: 121.59384, lat: 24.41373, answer: '金洋村', photo: 'knyahan',
+    info: '金洋族人的山區舊部落，位於和平北溪上游山區。',
+    hint: '仔細看名字！新家的族語名也是 Knyahan，位在南澳鄉南側、接近山區入口的地方。' },
+  { id: '奎諾斯社', key: 'kinus', oldName: 'Kinus', lon: 121.634739, lat: 24.406684, answer: '金洋村', photo: 'knyahan',
+    info: '位在和平溪左岸的一段山稜上，跟哥各朱社語言系統和遷徙過程都同源，兩社彼此緊鄰。',
+    hint: '奎諾斯社的族人，和「舊金洋」的族人搬到了同一個村落。' },
+  { id: '比亞毫社', key: 'piyahaw', oldName: 'Piyahaw／比亞豪', lon: 121.53802, lat: 24.41695, answer: '碧侯村', photo: 'piyahaw',
+    info: '碧候族人的重要舊部落，位於和平北溪上游河階地。',
+    hint: '念念看：Piyahaw、Pyahaw。新家的族語名跟舊部落幾乎一樣，位在南澳北溪旁，有溫泉。' },
+  { id: '莫瑤社', key: 'muyaw', oldName: 'Muyaw／Kumuyaw', lon: 121.556661, lat: 24.403659, answer: '澳花村', photo: 'muyaw',
+    info: '位在和平溪左岸山腰平坦地，跟各姆姆一樣是南澳很早就有人居住的古老部落，Muyaw 是「涉水」的意思。',
+    hint: '族人沿著和平溪往下走。新家在南澳鄉最南端、和平溪出海口附近，族語名是 Kumuyaw。' },
+  { id: '克魯模安／庫巴博', key: 'kbabaw', oldName: "K'bu／Kerumoan", lon: 121.592151, lat: 24.422515, answer: '南澳村', photo: 'kbabaw',
+    info: '一個部落分上下兩層，下層庫巴博、上層克魯模安，相傳是同一頭目的兩個兒子分別建立的。',
+    hint: '新家在南澳鄉中心的大南澳平原，是鄉公所和學校集中的地方。' },
+  { id: '各姆姆社', key: 'kngungu', oldName: "Kb'bu／Kngungu", lon: 121.57817, lat: 24.400337, answer: '南澳村', photo: 'kngungu',
+    info: '位在金洋南方山脊平台上，緊臨和平溪，是南澳群裡地勢最低的部落，曾是泰雅古社，後由巴博凱凱遷來的族人重新建社。',
+    hint: '新家聚集了來自庫巴博、各姆姆等不同舊社的族人，是南澳鄉行政與生活的中心。' },
+];
+
+// 有實際路線檔（GPX）的 4 組用真實路線，其他用虛線示意。
+// 莫瑤社的路線檔（g_aohua）終點是比亞毫社山、沒經過莫瑤社，暫時改用虛線。
+const ROUTE_NOTE = {
+  true: '地圖上的路線依遷村路線圖繪製。',
+  false: '這組沒有路線紀錄，地圖上的虛線只是示意舊部落和新家的位置。',
+};
+
+// ─── 狀態 ───
+const solved = new Set();
+let current = null;   // 目前選中的舊部落
+let wrongCount = 0;
+let routes = {};
+
+// ─── 地圖 ───
+const mapStyle = {
+  version: 8,
+  glyphs: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',
+  sources: {
+    taiwan: { type: 'geojson', data: 'data/taiwan-boundary.geojson' },
+    openmaptiles: { type: 'vector', url: 'https://tiles.openfreemap.org/planet', attribution: '<a href="https://openfreemap.org/" target="_blank">OpenFreeMap</a> · <a href="https://www.openstreetmap.org/copyright" target="_blank">© OpenStreetMap contributors</a>' },
+  },
+  layers: [
+    { id: 'paper-ocean', type: 'background', paint: { 'background-color': '#dce5e3' } },
+    { id: 'taiwan-land', type: 'fill', source: 'taiwan', paint: { 'fill-color': '#eeeee5' } },
+    { id: 'forest', type: 'fill', source: 'openmaptiles', 'source-layer': 'landcover', filter: ['in', 'class', 'wood', 'grass', 'scrub'], paint: { 'fill-color': '#bfcbb9', 'fill-opacity': .65 } },
+    { id: 'park', type: 'fill', source: 'openmaptiles', 'source-layer': 'park', paint: { 'fill-color': '#c3cdbb', 'fill-opacity': .25 } },
+    { id: 'residential', type: 'fill', source: 'openmaptiles', 'source-layer': 'landuse', filter: ['==', 'class', 'residential'], paint: { 'fill-color': '#e7e5dc', 'fill-opacity': .7 } },
+    { id: 'water', type: 'fill', source: 'openmaptiles', 'source-layer': 'water', paint: { 'fill-color': '#dce5e3' } },
+    { id: 'waterways', type: 'line', source: 'openmaptiles', 'source-layer': 'waterway', paint: { 'line-color': '#a9c1c1', 'line-opacity': .8, 'line-width': ['interpolate', ['linear'], ['zoom'], 6, .3, 12, 1.5] } },
+    { id: 'coastline', type: 'line', source: 'taiwan', paint: { 'line-color': '#91a69e', 'line-width': .8, 'line-opacity': .5 } },
+    { id: 'major-roads', type: 'line', source: 'openmaptiles', 'source-layer': 'transportation', filter: ['in', 'class', 'motorway', 'trunk', 'primary', 'secondary'], paint: { 'line-color': '#b5ac97', 'line-opacity': .55, 'line-width': ['interpolate', ['linear'], ['zoom'], 6, .45, 12, 1.5] } },
+    { id: 'administration', type: 'line', source: 'openmaptiles', 'source-layer': 'boundary', filter: ['==', 'admin_level', 6], paint: { 'line-color': '#8f9b8e', 'line-opacity': .32, 'line-width': .7, 'line-dasharray': [3, 3] } },
+  ],
+};
+
+const map = new maplibregl.Map({
+  container: 'map', style: mapStyle, center: [121.68, 24.43], zoom: 10.6,
+  attributionControl: { compact: true }, dragRotate: false, pitchWithRotate: false, touchPitch: false,
+});
+map.touchZoomRotate.disableRotation();
+map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+
+function fitAll(animate = true) {
+  const b = new maplibregl.LngLatBounds();
+  TRIBES.forEach(t => b.extend([t.lon, t.lat]));
+  Object.values(VILLAGES).forEach(v => b.extend([v.lon, v.lat]));
+  const mobile = innerWidth <= 760;
+  map.fitBounds(b, { padding: mobile ? { top: 64, bottom: 64, left: 28, right: 78 } : { top: 90, bottom: 70, left: 70, right: 90 }, duration: animate ? 900 : 0 });
+}
+
+// 金岳村與碧侯村很近，標籤分左右上下避免重疊
+const LABEL_SIDE = { 金岳村: 'left', 碧侯村: 'up', 南澳村: 'right' };
+const OLD_LABEL_SIDE = { hagaparis: 'left', ryohen: 'right', kbabaw: 'up' };
+
+// 舊部落點（不可點，只用來顯示位置）
+const oldMarkers = {};
+TRIBES.forEach(t => {
+  const el = document.createElement('div');
+  el.className = 'old-dot' + (OLD_LABEL_SIDE[t.key] ? ' lbl-' + OLD_LABEL_SIDE[t.key] : '');
+  el.innerHTML = `<i></i><span>${t.id}</span>`;
+  oldMarkers[t.key] = el;
+  new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat([t.lon, t.lat]).addTo(map);
+});
+
+// 現今村落（作答按鈕）
+const villageEls = {};
+Object.entries(VILLAGES).forEach(([name, v]) => {
+  const el = document.createElement('button');
+  el.type = 'button';
+  el.className = 'village' + (LABEL_SIDE[name] ? ' lbl-' + LABEL_SIDE[name] : '');
+  el.setAttribute('aria-label', `選擇${name}`);
+  el.innerHTML = `<i></i><span>${name}</span>`;
+  el.addEventListener('click', e => { e.stopPropagation(); pickVillage(name); });
+  villageEls[name] = el;
+  new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat([v.lon, v.lat]).addTo(map);
+});
+
+map.on('load', async () => {
+  fitAll(false);
+  try { routes = await (await fetch('data/routes.json')).json(); } catch (e) { routes = {}; }
+  map.addSource('routes', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+  map.addLayer({ id: 'route-glow', type: 'line', source: 'routes', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#b27745', 'line-width': 8, 'line-opacity': ['case', ['get', 'active'], .22, .08] } });
+  map.addLayer({ id: 'route-solid', type: 'line', source: 'routes', filter: ['==', ['get', 'real'], true], layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#b27745', 'line-width': ['case', ['get', 'active'], 3.4, 2.2], 'line-opacity': ['case', ['get', 'active'], 1, .55] } });
+  map.addLayer({ id: 'route-dash', type: 'line', source: 'routes', filter: ['==', ['get', 'real'], false], layout: { 'line-cap': 'round' }, paint: { 'line-color': '#b27745', 'line-width': ['case', ['get', 'active'], 2.6, 1.8], 'line-dasharray': [2, 2], 'line-opacity': ['case', ['get', 'active'], 1, .55] } });
+});
+addEventListener('resize', () => { if (!current) fitAll(false); });
+
+function routeCoords(t) {
+  return routes[t.key] || [[t.lon, t.lat], [VILLAGES[t.answer].lon, VILLAGES[t.answer].lat]];
+}
+let drawing = null;
+function drawRoutes(animateKey) {
+  const src = map.getSource('routes');
+  if (!src) return;
+  const build = partial => ({
+    type: 'FeatureCollection',
+    features: TRIBES.filter(t => solved.has(t.key)).map(t => {
+      let coords = routeCoords(t);
+      if (t.key === animateKey && partial < 1) coords = sliceLine(coords, partial);
+      return { type: 'Feature', properties: { real: !!routes[t.key], active: t.key === animateKey }, geometry: { type: 'LineString', coordinates: coords } };
+    }),
+  });
+  cancelAnimationFrame(drawing);
+  if (!animateKey || matchMedia('(prefers-reduced-motion: reduce)').matches) { src.setData(build(1)); return; }
+  const start = performance.now(), duration = 1800;
+  const step = now => {
+    const p = Math.min(1, (now - start) / duration);
+    src.setData(build(1 - Math.pow(1 - p, 3)));
+    if (p < 1) drawing = requestAnimationFrame(step);
+  };
+  drawing = requestAnimationFrame(step);
+}
+// 依長度比例截取路線的前段，讓路線像被畫出來一樣
+function sliceLine(coords, p) {
+  if (coords.length < 2) return coords;
+  const seg = []; let total = 0;
+  for (let i = 1; i < coords.length; i++) { const d = Math.hypot(coords[i][0] - coords[i - 1][0], coords[i][1] - coords[i - 1][1]); seg.push(d); total += d; }
+  let want = total * Math.max(.001, p); const out = [coords[0]];
+  for (let i = 0; i < seg.length; i++) {
+    if (want >= seg[i]) { out.push(coords[i + 1]); want -= seg[i]; continue; }
+    const r = want / seg[i];
+    out.push([coords[i][0] + (coords[i + 1][0] - coords[i][0]) * r, coords[i][1] + (coords[i + 1][1] - coords[i][1]) * r]);
+    break;
+  }
+  return out;
+}
+
+// ─── 介面 ───
+const $ = id => document.getElementById(id);
+const listEl = $('list'), storyEl = $('story');
+
+function renderList() {
+  listEl.innerHTML = '';
+  TRIBES.forEach(t => {
+    const done = solved.has(t.key);
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.setAttribute('role', 'listitem');
+    btn.className = 'tribe' + (done ? ' solved' : '');
+    btn.innerHTML = `<img src="photos/${t.photo}.jpg" alt="" loading="lazy"><span><b>${t.id}</b><small>${t.oldName}</small></span><span class="state">${done ? '✓ ' + t.answer : '讀故事 →'}</span>`;
+    btn.addEventListener('click', () => openStory(t));
+    listEl.append(btn);
+  });
+  const n = solved.size;
+  $('progress-text').textContent = `${n} / ${TRIBES.length} 個部落找到新家`;
+  $('progress-bar').style.width = `${n / TRIBES.length * 100}%`;
+}
+
+function startTip() { return innerWidth <= 760 ? '先從下方選一個舊部落' : '先從左邊選一個舊部落'; }
+function setTip(text) { $('map-tip').textContent = text; }
+function clearVillageStates() { Object.values(villageEls).forEach(el => el.classList.remove('is-picking', 'is-wrong', 'is-correct', 'is-hint')); }
+
+function openStory(t) {
+  current = t; wrongCount = 0;
+  listEl.style.display = 'none';
+  storyEl.classList.add('is-open');
+  $('panel-body').scrollTop = 0;
+  $('story-photo').src = `photos/${t.photo}.jpg`;
+  $('story-photo').alt = `${t.id}舊部落照片`;
+  $('story-name').textContent = t.id;
+  $('story-old').textContent = '族語名 ' + t.oldName;
+  $('story-text').textContent = t.info;
+  $('feedback').classList.remove('is-on');
+  Object.entries(oldMarkers).forEach(([k, el]) => el.classList.toggle('is-active', k === t.key));
+  clearVillageStates();
+  const done = solved.has(t.key);
+  $('ask').style.display = done ? 'none' : '';
+  if (done) { showAfter(t, false); setTip(`${t.id} → ${t.answer}`); }
+  else {
+    $('after').classList.remove('is-on');
+    Object.values(villageEls).forEach(el => el.classList.add('is-picking'));
+    setTip(`${t.id}的族人搬到了哪裡？點選藍色村落`);
+    map.flyTo({ center: [t.lon, t.lat], zoom: Math.max(map.getZoom(), 10.4), duration: 700 });
+    setTimeout(() => { if (current === t) fitAll(); }, 900);
+  }
+}
+
+function closeStory() {
+  current = null;
+  storyEl.classList.remove('is-open');
+  listEl.style.display = '';
+  Object.values(oldMarkers).forEach(el => el.classList.remove('is-active'));
+  clearVillageStates();
+  setTip(solved.size === TRIBES.length ? '全部完成！' : startTip());
+  renderList();
+  drawRoutes(null);
+  fitAll();
+}
+
+function pickVillage(name) {
+  const t = current;
+  if (!t) { setTip('先選一個舊部落，讀完故事再來找新家'); $('map-tip').classList.remove('shake'); void $('map-tip').offsetWidth; $('map-tip').classList.add('shake'); return; }
+  if (solved.has(t.key)) return;
+  const el = villageEls[name];
+  if (name === t.answer) {
+    solved.add(t.key);
+    clearVillageStates();
+    el.classList.add('is-correct');
+    oldMarkers[t.key].classList.add('is-solved');
+    $('ask').style.display = 'none';
+    $('feedback').classList.remove('is-on');
+    showAfter(t, true);
+    setTip(`答對了！${t.id} → ${t.answer}`);
+    const b = new maplibregl.LngLatBounds();
+    routeCoords(t).forEach(c => b.extend(c));
+    const mobile = innerWidth <= 760;
+    map.fitBounds(b, { padding: mobile ? { top: 64, bottom: 56, left: 40, right: 78 } : 120, maxZoom: 11.5, duration: 900 });
+    setTimeout(() => drawRoutes(t.key), 450);
+    renderList();
+    return;
+  }
+  // 答錯：介紹點到的村落（也是在認識南澳），再給提示；連錯兩次就讓正確答案閃爍
+  wrongCount++;
+  el.classList.remove('is-wrong'); void el.offsetWidth; el.classList.add('is-wrong');
+  setTimeout(() => el.classList.remove('is-wrong'), 600);
+  const fb = $('feedback');
+  const v = VILLAGES[name];
+  fb.innerHTML = `<b>不是${name}喔。</b>${name}${v.info.slice(0, v.info.indexOf('。') + 1)}<br><br><b>提示：</b>${t.hint}` + (wrongCount >= 2 ? '<br>地圖上閃爍的村落就是答案。' : '');
+  fb.classList.remove('is-on'); void fb.offsetWidth; fb.classList.add('is-on');
+  if (wrongCount >= 2) villageEls[t.answer].classList.add('is-hint');
+  fb.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function showAfter(t, scroll) {
+  const v = VILLAGES[t.answer];
+  $('after-name').textContent = `${t.answer}（${v.oldName}）`;
+  $('after-text').textContent = v.info;
+  $('route-note').textContent = ROUTE_NOTE[!!routes[t.key]];
+  const allDone = solved.size === TRIBES.length;
+  $('next').textContent = allDone ? '看完成畫面 →' : (TRIBES.some(x => !solved.has(x.key)) ? '下一個部落 →' : '回到清單');
+  $('after').classList.add('is-on');
+  if (!scroll) drawRoutes(null);
+  if (scroll) setTimeout(() => $('after').scrollIntoView({ behavior: 'smooth', block: 'start' }), 300);
+}
+
+$('back').addEventListener('click', closeStory);
+$('next').addEventListener('click', () => {
+  if (solved.size === TRIBES.length) { showFinish(); return; }
+  const idx = TRIBES.indexOf(current);
+  const nextT = TRIBES.slice(idx + 1).concat(TRIBES.slice(0, idx)).find(x => !solved.has(x.key));
+  nextT ? openStory(nextT) : closeStory();
+});
+
+function showFinish() {
+  closeStory();
+  $('finish-list').innerHTML = TRIBES.map(t => `<li><b>${t.id}</b><span>→ ${t.answer}</span></li>`).join('');
+  $('finish').classList.add('is-on');
+  $('replay').focus();
+}
+$('view-map').addEventListener('click', () => { $('finish').classList.remove('is-on'); setTip('這就是 8 個舊部落的遷徙路線'); });
+$('replay').addEventListener('click', () => {
+  solved.clear();
+  Object.values(oldMarkers).forEach(el => el.classList.remove('is-solved'));
+  $('finish').classList.remove('is-on');
+  closeStory();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('finish').classList.contains('is-on')) $('finish').classList.remove('is-on'); });
+
+renderList();
+setTip(startTip());
+</script>
+</body>
+</html>
