@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>舊部落找新家｜南澳遷徙小遊戲</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Ccircle cx=%2216%22 cy=%2216%22 r=%2214%22 fill=%22%23b27745%22/%3E%3Cpath d=%22M6 24 L13 13 L18 19 L22 14 L27 24Z%22 fill=%22%23fbf8ee%22/%3E%3C/svg%3E">
 <meta name="description" content="8 個山裡的舊部落，族人搬到了山下哪裡？比對族語名門牌、打聽村落消息，收集星星與故事卡。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -225,7 +226,8 @@ mark { background: #f3dcb2; color: inherit; border-radius: 3px; padding: 0 1px; 
 .btn-start:hover { background: #c0844f; }
 .btn-start:active { animation: none; transform: translateY(5px); box-shadow: 0 1px 0 #8a5a30, 0 6px 14px rgba(40,55,45,.25); }
 @keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
-.hud-left { display: flex; align-items: center; gap: 8px; }
+.hud-left, .hud-right { display: flex; align-items: center; gap: 8px; }
+.title-sound { position: absolute; top: 16px; right: 16px; z-index: 2; }
 .home-btn { width: 42px; height: 42px; display: grid; place-items: center; font-size: 22px; line-height: 1; color: var(--ink); background: rgba(251,248,238,.95); border: 1px solid var(--line); border-radius: 50%; box-shadow: 0 6px 18px rgba(40,55,45,.12); }
 .home-btn:hover { background: #e6ebe2; }
 .back-btn { height: 42px; padding: 0 16px; font-size: 14px; font-weight: 600; color: var(--ink); background: rgba(251,248,238,.95); border: 1px solid var(--line); border-radius: 999px; box-shadow: 0 6px 18px rgba(40,55,45,.12); white-space: nowrap; }
@@ -293,9 +295,8 @@ mark { background: #f3dcb2; color: inherit; border-radius: 3px; padding: 0 1px; 
     <path d="M1440 540 C1380 560 1330 600 1300 650 C1270 700 1250 760 1215 820 C1200 850 1190 880 1185 900 H1440Z" fill="url(#sea)"/>
     <path d="M1440 540 C1380 560 1330 600 1300 650 C1270 700 1250 760 1215 820 C1200 850 1190 880 1185 900" fill="none" stroke="#f3f1e9" stroke-width="5" opacity=".8"/>
     <path d="M0 700 C160 640 300 690 420 650 C560 610 700 700 860 690 C980 682 1060 720 1150 760 C1180 790 1200 840 1205 900 H0Z" fill="#8fa78c"/>
-    <path d="M-60 500 C60 530 200 590 330 630 C380 645 420 660 460 670 C620 705 760 720 900 740 C1030 760 1120 790 1230 820" fill="none" stroke="#dce5e3" stroke-width="16" stroke-linecap="round" opacity=".95"/>
-    <path d="M-60 500 C60 530 200 590 330 630 C380 645 420 660 460 670 C620 705 760 720 900 740 C1030 760 1120 790 1230 820" fill="none" stroke="#f3f7f5" stroke-width="4" stroke-linecap="round" opacity=".7"/>
   </svg>
+  <button type="button" class="home-btn sound-btn title-sound" aria-label="音效開關" title="音效開關">🔊</button>
   <div class="title-content">
     <div class="eyebrow">南澳虛擬博物館 · 遷徙小遊戲</div>
     <h1 id="intro-title"><span>舊部落</span><span>找新家</span></h1>
@@ -346,7 +347,7 @@ mark { background: #f3dcb2; color: inherit; border-radius: 3px; padding: 0 1px; 
 <!-- 狀態列 -->
 <header class="hud" id="hud" hidden>
   <div class="hud-left"><button type="button" class="home-btn" id="home-btn" aria-label="回首頁" title="回首頁">⌂</button><button type="button" class="back-btn" id="back-btn" aria-label="回上一站" title="回上一站">←<span> 上一站</span></button><div class="hud-pill"><span id="round-label">第 1 站</span><div class="pips" id="pips"></div></div></div>
-  <div class="hud-pill"><span class="streak" id="streak" hidden></span><span class="score" id="score">★ 0</span></div>
+  <div class="hud-right"><div class="hud-pill"><span class="streak" id="streak" hidden></span><span class="score" id="score">★ 0</span></div><button type="button" class="home-btn sound-btn" aria-label="音效開關" title="音效開關">🔊</button></div>
 </header>
 
 <section class="mission" id="mission" hidden aria-live="polite"></section>
@@ -404,6 +405,58 @@ const FIRST_DETECTIVE = TRIBES.findIndex(t => t.mode === 'detective');
 // 莫瑤社的路線檔（g_aohua）終點是比亞毫社山、沒經過莫瑤社，暫時改用虛線。
 let routes = {};
 const LABEL_SIDE = { 金岳村: 'left', 碧侯村: 'up', 南澳村: 'right', 東岳村: 'left' };
+
+// ─── 音效：用 Web Audio 即時合成，不需要音檔 ───
+// 走溫和的木琴、輕敲風格；右上角 🔊 可以關掉，設定記在這台裝置的瀏覽器裡。
+const sfx = (() => {
+  let ctx = null;
+  let on = true;
+  try { on = localStorage.getItem('nanao-game-sound') !== 'off'; } catch (e) {}
+  const ac = () => {
+    if (!ctx) { const C = window.AudioContext || window.webkitAudioContext; if (!C) return null; ctx = new C(); }
+    if (ctx.state === 'suspended') ctx.resume();
+    return ctx;
+  };
+  // 木琴音色：三角波＋高八度的正弦泛音，快速衰減
+  function note(freq, at = 0, dur = .35, vol = .16, type = 'triangle') {
+    const c = ac(); if (!c || !on) return;
+    const t0 = c.currentTime + at;
+    [[type, freq, vol], ['sine', freq * 2, vol * .35]].forEach(([ty, f, v]) => {
+      const o = c.createOscillator(), g = c.createGain();
+      o.type = ty; o.frequency.value = f;
+      g.gain.setValueAtTime(0, t0);
+      g.gain.linearRampToValueAtTime(v, t0 + .008);
+      g.gain.exponentialRampToValueAtTime(.0001, t0 + dur);
+      o.connect(g).connect(c.destination); o.start(t0); o.stop(t0 + dur + .05);
+    });
+  }
+  // 濾波雜訊：腳步、翻紙、咻的聲音
+  function noise(at, dur, vol, f1, f2, q = 1.2, type = 'bandpass') {
+    const c = ac(); if (!c || !on) return;
+    const t0 = c.currentTime + at;
+    const buf = c.createBuffer(1, Math.ceil(c.sampleRate * dur), c.sampleRate);
+    const d = buf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    const s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+    s.buffer = buf; f.type = type; f.Q.value = q;
+    f.frequency.setValueAtTime(f1, t0); f.frequency.exponentialRampToValueAtTime(f2, t0 + dur);
+    g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(vol, t0 + dur * .2); g.gain.exponentialRampToValueAtTime(.0001, t0 + dur);
+    s.connect(f).connect(g).connect(c.destination); s.start(t0); s.stop(t0 + dur);
+  }
+  return {
+    get on() { return on; },
+    toggle() { on = !on; try { localStorage.setItem('nanao-game-sound', on ? 'on' : 'off'); } catch (e) {} if (on) this.tap(); return on; },
+    unlock() { ac(); },
+    tap() { note(784, 0, .12, .07, 'sine'); },
+    flip() { noise(0, .22, .12, 3000, 1200, .7, 'highpass'); },
+    wrong() { note(220, 0, .22, .14, 'sine'); note(165, .13, .3, .14, 'sine'); },
+    correct() { [523.25, 659.25, 783.99].forEach((f, i) => note(f, i * .09, .5, .15)); },
+    step() { noise(0, .07, .09, 700, 500, 2.5); },
+    whoosh(dur) { noise(0, dur, .1, 300, 2400, 1.4); },
+    star(i, got) { got ? note([1046.5, 1318.5, 1568][i], 0, .5, .13) : note(196, 0, .18, .08, 'sine'); },
+    levelUp() { [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => note(f, i * .12, .6, .14)); },
+    finish() { [[523.25, 0], [659.25, .14], [783.99, .28], [1046.5, .42], [783.99, .62], [1046.5, .78]].forEach(([f, a]) => note(f, a, .7, .14)); },
+  };
+})();
 
 // ─── 遊戲狀態 ───
 const state = { session: 0, round: 0, stars: 0, streak: 0, wrong: 0, viewing: null, seen: new Set(), results: [], busy: false, playing: false };
@@ -545,7 +598,10 @@ function walk(t) {
       walkerEl.classList.toggle('spark', !routes[t.key]);
       walker.setLngLat(coords[0]).addTo(map);
       const duration = reduce ? 1 : (routes[t.key] ? 2600 : 1600), start = performance.now();
+      let lastStep = 0;
+      if (!routes[t.key]) sfx.whoosh(duration / 1000);
       const step = now => {
+        if (routes[t.key] && now - lastStep > 290 && now - start < duration - 150) { lastStep = now; sfx.step(); }
         const p = Math.min(1, (now - start) / duration);
         const e = p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
         const line = sliceLine(coords, e);
@@ -615,7 +671,7 @@ function markViewing() {
 }
 
 function startRound() {
-  if (state.round === FIRST_DETECTIVE && !state.level2Shown) { state.level2Shown = true; $('mission').hidden = true; $('level2').hidden = false; renderHud(); setRoutes(null); fitAll(); return; }
+  if (state.round === FIRST_DETECTIVE && !state.level2Shown) { state.level2Shown = true; $('mission').hidden = true; $('level2').hidden = false; sfx.levelUp(); renderHud(); setRoutes(null); fitAll(); return; }
   const t = TRIBES[state.round];
   state.wrong = 0; state.busy = false; state.viewing = null; state.seen = new Set();
   Object.values(villageEls).forEach(el => el.classList.remove('is-wrong', 'is-correct', 'is-hint', 'is-viewing', 'is-seen'));
@@ -631,6 +687,7 @@ function onVillage(name) {
   const t = TRIBES[state.round];
   if (t.mode === 'name') { answer(name); return; }
   // 第二關：點村落只是翻名片，不算作答
+  sfx.flip();
   state.viewing = name; state.seen.add(name);
   markViewing(); renderMission();
   if (isMobile()) $('mission').scrollTop = 0;
@@ -640,6 +697,7 @@ function answer(name) {
   const t = TRIBES[state.round];
   const el = villageEls[name];
   if (name === t.answer) { win(t, el); return; }
+  sfx.wrong();
   state.wrong++; state.streak = 0;
   el.classList.remove('is-wrong'); void el.offsetWidth; el.classList.add('is-wrong');
   setTimeout(() => el.classList.remove('is-wrong'), 700);
@@ -662,6 +720,7 @@ function answer(name) {
 
 async function win(t, el) {
   const session = state.session;
+  sfx.correct();
   state.busy = true;
   const earned = roundStars();
   state.stars += earned; state.streak++;
@@ -683,6 +742,7 @@ async function win(t, el) {
     + (routes[t.key] ? '' : '<p style="font-size:14px;font-weight:500">點狀弧線：實際遷徙路徑尚未找到</p>')
     + `<div class="stars">${[0, 1, 2].map(i => `<span class="${i < earned ? '' : 'lost'}" style="animation-delay:${.15 + i * .18}s">★</span>`).join('')}</div>`;
   arrive.hidden = false;
+  [0, 1, 2].forEach(i => setTimeout(() => { if (session === state.session) sfx.star(i, i < earned); }, (.15 + i * .18) * 1000 + 120));
   $('score').classList.remove('bump'); void $('score').offsetWidth; $('score').classList.add('bump');
   await new Promise(r => setTimeout(r, part ? 2000 : 1500));
   arrive.hidden = true;
@@ -692,6 +752,7 @@ async function win(t, el) {
 }
 
 function showStory(t, earned, inGame, onClose) {
+  sfx.flip();
   const v = VILLAGES[t.answer];
   const last = state.round >= TRIBES.length - 1;
   const part = t.mode === 'name' ? commonPart(t.name, v.plate) : '';
@@ -727,6 +788,7 @@ function titleFor(s) {
 }
 function finish() {
   state.playing = false;
+  sfx.finish();
   saveBest(state.stars);
   $('mission').hidden = true;
   document.body.classList.remove('playing');
@@ -785,6 +847,7 @@ function goHome() {
   $('intro').hidden = false;
 }
 $('start').addEventListener('click', () => {
+  sfx.unlock(); sfx.tap();
   $('intro').hidden = true; $('hud').hidden = false; $('route-legend').hidden = false;
   state.playing = true;
   startRound();
@@ -829,6 +892,17 @@ function fitScene() {
   else { svg.setAttribute('viewBox', '0 0 1440 900'); svg.setAttribute('preserveAspectRatio', 'xMidYMax slice'); document.getElementById('sky-rect').style.opacity = 1; }
 }
 fitScene(); addEventListener('resize', fitScene);
+// 音效開關按鈕（首頁與遊戲中各一顆，狀態同步）
+function syncSound() { document.querySelectorAll('.sound-btn').forEach(b => { b.textContent = sfx.on ? '🔊' : '🔇'; b.setAttribute('aria-pressed', String(!sfx.on)); }); }
+document.querySelectorAll('.sound-btn').forEach(b => b.addEventListener('click', () => { sfx.unlock(); sfx.toggle(); syncSound(); }));
+syncSound();
+// 一般按鈕的輕敲聲
+document.addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (!b || b.classList.contains('sound-btn') || b.classList.contains('village') || b.id === 'start') return;
+  if (b.closest('.plates')) return;
+  sfx.tap();
+}, true);
 </script>
 </body>
 </html>
