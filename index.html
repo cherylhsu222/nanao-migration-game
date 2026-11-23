@@ -278,7 +278,7 @@ mark { background: #f3dcb2; color: inherit; border-radius: 3px; padding: 0 1px; 
 
 <!-- 開場 -->
 <section class="title-screen" id="intro" aria-labelledby="intro-title">
-  <!-- 插畫背景：遠山、河流、山路，小人從山上的舊部落走到山下村落 -->
+  <!-- 插畫背景：遠山、河流與大海（不放人物和標記，避免擋到標題文字） -->
   <svg class="scene" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
     <defs>
       <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9efe6"/><stop offset="1" stop-color="#f4f1e7"/></linearGradient>
@@ -293,22 +293,8 @@ mark { background: #f3dcb2; color: inherit; border-radius: 3px; padding: 0 1px; 
     <path d="M1440 540 C1380 560 1330 600 1300 650 C1270 700 1250 760 1215 820 C1200 850 1190 880 1185 900 H1440Z" fill="url(#sea)"/>
     <path d="M1440 540 C1380 560 1330 600 1300 650 C1270 700 1250 760 1215 820 C1200 850 1190 880 1185 900" fill="none" stroke="#f3f1e9" stroke-width="5" opacity=".8"/>
     <path d="M0 700 C160 640 300 690 420 650 C560 610 700 700 860 690 C980 682 1060 720 1150 760 C1180 790 1200 840 1205 900 H0Z" fill="#8fa78c"/>
-    <path d="M120 560 C260 610 330 640 460 670 C620 705 760 720 900 740 C1030 760 1120 790 1230 820" fill="none" stroke="#dce5e3" stroke-width="16" stroke-linecap="round" opacity=".95"/>
-    <path d="M120 560 C260 610 330 640 460 670 C620 705 760 720 900 740 C1030 760 1120 790 1230 820" fill="none" stroke="#f3f7f5" stroke-width="4" stroke-linecap="round" opacity=".7"/>
-    <path id="trail" d="M300 452 C350 520 420 540 470 600 C520 660 600 650 680 700 C760 750 860 760 940 800 C1000 830 1040 830 1080 812" fill="none" stroke="#b27745" stroke-width="5" stroke-dasharray="2 12" stroke-linecap="round"/>
-    <g fill="#a8743f" stroke="#fbf8ee" stroke-width="3"><circle cx="300" cy="452" r="9"/><circle cx="420" cy="430" r="7"/><circle cx="210" cy="470" r="7"/><circle cx="560" cy="380" r="7"/></g>
-    <path d="M300 444 V404 L326 414 L300 424" fill="#b85a48" stroke="#5a3a24" stroke-width="2.5" stroke-linejoin="round"/>
-    <g transform="translate(1062 772)">
-      <path d="M0 26 L18 8 L36 26 V50 H0Z" fill="#fbf8ee" stroke="#435348" stroke-width="2.5" stroke-linejoin="round"/>
-      <path d="M30 34 L50 16 L70 34 V54 H30Z" fill="#eef3f5" stroke="#435348" stroke-width="2.5" stroke-linejoin="round"/>
-      <rect x="13" y="34" width="10" height="16" fill="#3f82a6"/>
-      <circle cx="50" cy="-4" r="9" fill="#3f82a6" stroke="#fbf8ee" stroke-width="3"/>
-    </g>
-    <g class="hiker">
-      <circle r="17" fill="#b27745" stroke="#fbf8ee" stroke-width="4"/>
-      <g transform="translate(-10 -11) scale(.85)" fill="#fbf8ee"><circle cx="13" cy="4" r="2.2"/><path d="M10.2 8.3 7 9.8V14h2v-2.9l1.4-.6-1.6 8.2L4.6 18l-.4 2 6.2 1.2 1.1-5.3 2.1 2V24h2v-7.3l-2.1-2 .6-3.1A7 7 0 0 0 19 14v-2a5 5 0 0 1-4.3-2.5l-1-1.6A2 2 0 0 0 12 7c-.6 0-1.2.4-1.8 1.3Z"/></g>
-      <animateMotion dur="9s" repeatCount="indefinite" rotate="0" keyPoints="0;1;1" keyTimes="0;.85;1" calcMode="linear"><mpath href="#trail"/></animateMotion>
-    </g>
+    <path d="M-60 500 C60 530 200 590 330 630 C380 645 420 660 460 670 C620 705 760 720 900 740 C1030 760 1120 790 1230 820" fill="none" stroke="#dce5e3" stroke-width="16" stroke-linecap="round" opacity=".95"/>
+    <path d="M-60 500 C60 530 200 590 330 630 C380 645 420 660 460 670 C620 705 760 720 900 740 C1030 760 1120 790 1230 820" fill="none" stroke="#f3f7f5" stroke-width="4" stroke-linecap="round" opacity=".7"/>
   </svg>
   <div class="title-content">
     <div class="eyebrow">南澳虛擬博物館 · 遷徙小遊戲</div>
