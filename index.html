@@ -163,7 +163,8 @@ mark { background: #f3dcb2; color: inherit; border-radius: 3px; padding: 0 1px; 
 @keyframes step { from { transform: translateY(-1px) rotate(-4deg); } to { transform: translateY(1px) rotate(4deg); } }
 
 /* ─── 抵達 ─── */
-.arrive { position: fixed; left: 50%; top: 18%; z-index: 20; transform: translateX(-50%); width: min(480px, 92vw); padding: 22px 24px 20px; text-align: center; pointer-events: none; background: rgba(251,248,238,.96); border: 1px solid var(--line); border-radius: 22px; box-shadow: 0 20px 50px rgba(40,55,45,.25); animation: pop .4s cubic-bezier(.2,1.4,.4,1); }
+/* 用 left/right + margin 置中，不用 transform，彈出動畫才不會把卡片推歪 */
+.arrive { position: fixed; left: 0; right: 0; margin: 0 auto; top: 18%; z-index: 20; width: min(480px, 92vw); padding: 22px 24px 20px; text-align: center; pointer-events: none; background: rgba(251,248,238,.96); border: 1px solid var(--line); border-radius: 22px; box-shadow: 0 20px 50px rgba(40,55,45,.25); animation: pop .4s cubic-bezier(.2,1.4,.4,1); }
 .arrive h2 { font: 700 clamp(34px, 6vw, 52px)/1.2 var(--serif); letter-spacing: .12em; color: var(--ink); text-shadow: 0 2px 0 #fbf8ee, 0 0 18px rgba(251,248,238,.95); animation: pop .5s cubic-bezier(.2,1.6,.4,1); }
 .arrive p { margin-top: 6px; font: 600 18px/1.4 var(--serif); color: var(--ink-2); text-shadow: 0 0 12px rgba(251,248,238,.95); }
 .arrive .names { display: inline-block; margin-top: 12px; padding: 8px 16px; font: 600 20px/1.4 var(--latin); background: #f1e6d4; border-radius: 12px; }
