@@ -163,13 +163,13 @@ mark { background: #f3dcb2; color: inherit; border-radius: 3px; padding: 0 1px; 
 @keyframes step { from { transform: translateY(-1px) rotate(-4deg); } to { transform: translateY(1px) rotate(4deg); } }
 
 /* ─── 抵達 ─── */
-.arrive { position: fixed; left: 50%; top: 20%; z-index: 20; transform: translateX(-50%); width: min(560px, 92vw); text-align: center; pointer-events: none; }
+.arrive { position: fixed; left: 50%; top: 18%; z-index: 20; transform: translateX(-50%); width: min(480px, 92vw); padding: 22px 24px 20px; text-align: center; pointer-events: none; background: rgba(251,248,238,.96); border: 1px solid var(--line); border-radius: 22px; box-shadow: 0 20px 50px rgba(40,55,45,.25); animation: pop .4s cubic-bezier(.2,1.4,.4,1); }
 .arrive h2 { font: 700 clamp(34px, 6vw, 52px)/1.2 var(--serif); letter-spacing: .12em; color: var(--ink); text-shadow: 0 2px 0 #fbf8ee, 0 0 18px rgba(251,248,238,.95); animation: pop .5s cubic-bezier(.2,1.6,.4,1); }
 .arrive p { margin-top: 6px; font: 600 18px/1.4 var(--serif); color: var(--ink-2); text-shadow: 0 0 12px rgba(251,248,238,.95); }
-.arrive .names { display: inline-block; margin-top: 10px; padding: 8px 16px; font: 600 20px/1.4 var(--latin); background: rgba(251,248,238,.95); border-radius: 12px; box-shadow: 0 6px 18px rgba(40,55,45,.15); }
+.arrive .names { display: inline-block; margin-top: 12px; padding: 8px 16px; font: 600 20px/1.4 var(--latin); background: #f1e6d4; border-radius: 12px; }
 .arrive .stars { margin-top: 10px; font-size: 40px; letter-spacing: 6px; }
 .arrive .stars span { display: inline-block; color: var(--star); text-shadow: 0 3px 10px rgba(217,154,62,.4); opacity: 0; animation: pop .45s cubic-bezier(.2,1.6,.4,1) forwards; }
-.arrive .stars span.lost { color: #d4d8cc; text-shadow: none; }
+.arrive .stars span.lost { color: #c4cabb; text-shadow: none; }
 @keyframes pop { from { opacity: 0; transform: scale(.3); } to { opacity: 1; transform: scale(1); } }
 
 /* ─── 故事卡、結算 ─── */
@@ -236,6 +236,8 @@ mark { background: #f3dcb2; color: inherit; border-radius: 3px; padding: 0 1px; 
 @media (max-width: 760px) {
   .title-content { margin-top: 9vh; }
   .btn-start { padding: 16px 36px; font-size: 19px; }
+  .title-actions { flex-direction: column; gap: 14px; }
+  .title-actions > button { width: min(260px, 80vw); }
   .home-btn { width: 38px; height: 38px; font-size: 20px; }
   .back-btn { height: 38px; width: 38px; padding: 0; font-size: 18px; }
   .back-btn span { display: none; }
@@ -247,7 +249,9 @@ mark { background: #f3dcb2; color: inherit; border-radius: 3px; padding: 0 1px; 
   .howto b { margin: 0; flex: none; }
   .intro-card .lead { font-size: 15px; }
   .hud-pill { padding: 8px 12px; gap: 8px; font-size: 13px; }
-  .pips i { width: 7px; height: 7px; }
+  .pips { display: none; }
+  .hud { gap: 6px; }
+  .hud-left, .hud-right { gap: 6px; }
   .maplibregl-ctrl-top-right { display: none; }
   .mission { left: 8px; right: 8px; bottom: 8px; width: auto; max-height: 48svh; padding: 14px; border-radius: 16px; }
   .mission-top { grid-template-columns: 48px 1fr auto; }
@@ -264,7 +268,7 @@ mark { background: #f3dcb2; color: inherit; border-radius: 3px; padding: 0 1px; 
   .village .plate b, .village .plate em { font-size: 11px; }
   .plates { display: grid; }
   .nameplate strong { font-size: 22px; }
-  .arrive { top: 12%; }
+  .arrive { top: 10%; padding: 18px 16px 16px; }
   .route-legend { display: none; }
   .album { gap: 6px; }
   .album span { font-size: 10px; padding: 14px 5px 5px; }
@@ -739,7 +743,7 @@ async function win(t, el) {
   const arrive = $('arrive');
   arrive.innerHTML = `<h2>抵達！</h2><p>${esc(t.id)} → ${esc(t.answer)}</p>`
     + (part ? `<div class="names">${markPart(t.name, part)} → ${markPart(v.plate, part)}</div>` : '')
-    + (routes[t.key] ? '' : '<p style="font-size:14px;font-weight:500">點狀弧線：實際遷徙路徑尚未找到</p>')
+    + (routes[t.key] ? '' : '<p style="margin-top:10px;font-size:13px;font-weight:500;color:var(--muted)">點狀弧線：實際遷徙路徑尚未找到</p>')
     + `<div class="stars">${[0, 1, 2].map(i => `<span class="${i < earned ? '' : 'lost'}" style="animation-delay:${.15 + i * .18}s">★</span>`).join('')}</div>`;
   arrive.hidden = false;
   [0, 1, 2].forEach(i => setTimeout(() => { if (session === state.session) sfx.star(i, i < earned); }, (.15 + i * .18) * 1000 + 120));
