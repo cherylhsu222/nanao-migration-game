@@ -204,6 +204,41 @@ mark { background: #f3dcb2; color: inherit; border-radius: 3px; padding: 0 1px; 
 .result .actions { margin-top: 24px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
 .end-bar { position: fixed; left: 50%; bottom: 20px; z-index: 10; transform: translateX(-50%); display: flex; gap: 10px; white-space: nowrap; }
 
+
+/* ─── 遊戲首頁 ─── */
+.title-screen { position: fixed; inset: 0; z-index: 30; overflow: hidden; display: flex; align-items: flex-start; justify-content: center; background: linear-gradient(#e9efe6, #f4f1e7); }
+.title-screen .scene { position: absolute; inset: 0; width: 100%; height: 100%; }
+.cloud { animation: drift 26s ease-in-out infinite alternate; }
+.cloud.c2 { animation-duration: 34s; animation-direction: alternate-reverse; }
+@keyframes drift { from { transform: translateX(-40px); } to { transform: translateX(60px); } }
+.title-content { position: relative; z-index: 1; margin-top: clamp(40px, 9vh, 110px); padding: 0 16px; text-align: center; animation: rise .6s ease; }
+.title-content h1 { margin-top: 12px; font: 700 clamp(48px, 9vw, 92px)/1.1 var(--serif); letter-spacing: .12em; color: var(--ink); text-shadow: 0 3px 0 #fbf8ee, 0 8px 24px rgba(251,248,238,.9); }
+.title-content h1 span { display: inline-block; animation: drop .7s cubic-bezier(.2,1.5,.4,1) both; }
+.title-content h1 span + span { animation-delay: .15s; }
+@keyframes drop { from { opacity: 0; transform: translateY(-30px) scale(.9); } to { opacity: 1; transform: none; } }
+.tagline { margin-top: 14px; font: 500 clamp(15px, 2vw, 19px)/1.7 var(--serif); color: var(--ink-2); text-shadow: 0 0 12px rgba(251,248,238,.95); }
+.chips { margin-top: 16px; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+.chips span { padding: 6px 14px; font-size: 14px; font-weight: 600; color: var(--ink); background: rgba(251,248,238,.92); border: 1px solid var(--line); border-radius: 999px; box-shadow: 0 4px 12px rgba(40,55,45,.08); }
+.best { margin-top: 12px; font-size: 15px; font-weight: 600; color: var(--star); text-shadow: 0 0 10px rgba(251,248,238,.95); }
+.title-actions { margin-top: 26px; display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; }
+.btn-start { padding: 18px 44px; border-radius: 999px; background: var(--accent); color: #fbf8ee; font: 700 22px/1 var(--sans); letter-spacing: .14em; box-shadow: 0 6px 0 #8a5a30, 0 16px 30px rgba(40,55,45,.25); animation: bounce 1.8s ease-in-out infinite; transition: transform .1s ease, box-shadow .1s ease; }
+.btn-start:hover { background: #c0844f; }
+.btn-start:active { animation: none; transform: translateY(5px); box-shadow: 0 1px 0 #8a5a30, 0 6px 14px rgba(40,55,45,.25); }
+@keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+.hud-left { display: flex; align-items: center; gap: 8px; }
+.home-btn { width: 42px; height: 42px; display: grid; place-items: center; font-size: 22px; line-height: 1; color: var(--ink); background: rgba(251,248,238,.95); border: 1px solid var(--line); border-radius: 50%; box-shadow: 0 6px 18px rgba(40,55,45,.12); }
+.home-btn:hover { background: #e6ebe2; }
+.back-btn { height: 42px; padding: 0 16px; font-size: 14px; font-weight: 600; color: var(--ink); background: rgba(251,248,238,.95); border: 1px solid var(--line); border-radius: 999px; box-shadow: 0 6px 18px rgba(40,55,45,.12); white-space: nowrap; }
+.back-btn:hover:not(:disabled) { background: #e6ebe2; }
+.back-btn:disabled { opacity: .4; cursor: default; }
+@media (max-width: 760px) {
+  .title-content { margin-top: 9vh; }
+  .btn-start { padding: 16px 36px; font-size: 19px; }
+  .home-btn { width: 38px; height: 38px; font-size: 20px; }
+  .back-btn { height: 38px; width: 38px; padding: 0; font-size: 18px; }
+  .back-btn span { display: none; }
+}
+
 @media (max-width: 760px) {
   .howto { grid-template-columns: 1fr; gap: 8px; margin: 22px 0 26px; }
   .howto div { display: flex; align-items: center; gap: 12px; padding: 10px 14px; text-align: left; }
@@ -242,19 +277,74 @@ mark { background: #f3dcb2; color: inherit; border-radius: 3px; padding: 0 1px; 
 <div id="map" aria-label="南澳舊部落與現今村落地圖"></div>
 
 <!-- 開場 -->
-<section class="screen" id="intro" aria-labelledby="intro-title">
-  <div class="intro-card">
+<section class="title-screen" id="intro" aria-labelledby="intro-title">
+  <!-- 插畫背景：遠山、河流、山路，小人從山上的舊部落走到山下村落 -->
+  <svg class="scene" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+    <defs>
+      <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9efe6"/><stop offset="1" stop-color="#f4f1e7"/></linearGradient>
+      <linearGradient id="sea" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#cfdcdb"/><stop offset="1" stop-color="#bccfd0"/></linearGradient>
+    </defs>
+    <rect id="sky-rect" width="1440" height="900" fill="url(#sky)"/>
+    <circle cx="1130" cy="210" r="86" fill="#f2e2c4" opacity=".85"/>
+    <g class="cloud c1"><ellipse cx="260" cy="170" rx="90" ry="22" fill="#fbf8ee" opacity=".9"/><ellipse cx="310" cy="156" rx="56" ry="20" fill="#fbf8ee" opacity=".9"/></g>
+    <g class="cloud c2"><ellipse cx="980" cy="120" rx="80" ry="18" fill="#fbf8ee" opacity=".8"/><ellipse cx="1025" cy="108" rx="46" ry="16" fill="#fbf8ee" opacity=".8"/></g>
+    <path d="M0 520 L120 400 L210 450 L330 330 L450 430 L560 360 L690 470 L820 390 L940 480 L1060 430 L1200 520 L1440 470 V900 H0Z" fill="#c8d4c3"/>
+    <path d="M0 600 L140 470 L260 540 L380 450 L520 560 L640 500 L760 590 L900 540 L1040 620 L1180 600 L1440 640 V900 H0Z" fill="#aabca6"/>
+    <path d="M1440 540 C1380 560 1330 600 1300 650 C1270 700 1250 760 1215 820 C1200 850 1190 880 1185 900 H1440Z" fill="url(#sea)"/>
+    <path d="M1440 540 C1380 560 1330 600 1300 650 C1270 700 1250 760 1215 820 C1200 850 1190 880 1185 900" fill="none" stroke="#f3f1e9" stroke-width="5" opacity=".8"/>
+    <path d="M0 700 C160 640 300 690 420 650 C560 610 700 700 860 690 C980 682 1060 720 1150 760 C1180 790 1200 840 1205 900 H0Z" fill="#8fa78c"/>
+    <path d="M120 560 C260 610 330 640 460 670 C620 705 760 720 900 740 C1030 760 1120 790 1230 820" fill="none" stroke="#dce5e3" stroke-width="16" stroke-linecap="round" opacity=".95"/>
+    <path d="M120 560 C260 610 330 640 460 670 C620 705 760 720 900 740 C1030 760 1120 790 1230 820" fill="none" stroke="#f3f7f5" stroke-width="4" stroke-linecap="round" opacity=".7"/>
+    <path id="trail" d="M300 452 C350 520 420 540 470 600 C520 660 600 650 680 700 C760 750 860 760 940 800 C1000 830 1040 830 1080 812" fill="none" stroke="#b27745" stroke-width="5" stroke-dasharray="2 12" stroke-linecap="round"/>
+    <g fill="#a8743f" stroke="#fbf8ee" stroke-width="3"><circle cx="300" cy="452" r="9"/><circle cx="420" cy="430" r="7"/><circle cx="210" cy="470" r="7"/><circle cx="560" cy="380" r="7"/></g>
+    <path d="M300 444 V404 L326 414 L300 424" fill="#b85a48" stroke="#5a3a24" stroke-width="2.5" stroke-linejoin="round"/>
+    <g transform="translate(1062 772)">
+      <path d="M0 26 L18 8 L36 26 V50 H0Z" fill="#fbf8ee" stroke="#435348" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M30 34 L50 16 L70 34 V54 H30Z" fill="#eef3f5" stroke="#435348" stroke-width="2.5" stroke-linejoin="round"/>
+      <rect x="13" y="34" width="10" height="16" fill="#3f82a6"/>
+      <circle cx="50" cy="-4" r="9" fill="#3f82a6" stroke="#fbf8ee" stroke-width="3"/>
+    </g>
+    <g class="hiker">
+      <circle r="17" fill="#b27745" stroke="#fbf8ee" stroke-width="4"/>
+      <g transform="translate(-10 -11) scale(.85)" fill="#fbf8ee"><circle cx="13" cy="4" r="2.2"/><path d="M10.2 8.3 7 9.8V14h2v-2.9l1.4-.6-1.6 8.2L4.6 18l-.4 2 6.2 1.2 1.1-5.3 2.1 2V24h2v-7.3l-2.1-2 .6-3.1A7 7 0 0 0 19 14v-2a5 5 0 0 1-4.3-2.5l-1-1.6A2 2 0 0 0 12 7c-.6 0-1.2.4-1.8 1.3Z"/></g>
+      <animateMotion dur="9s" repeatCount="indefinite" rotate="0" keyPoints="0;1;1" keyTimes="0;.85;1" calcMode="linear"><mpath href="#trail"/></animateMotion>
+    </g>
+  </svg>
+  <div class="title-content">
     <div class="eyebrow">南澳虛擬博物館 · 遷徙小遊戲</div>
-    <h1 id="intro-title">舊部落找新家</h1>
-    <p class="lead">山裡有 8 個泰雅族的舊部落，<br>族人後來搬到了山下的哪個村落？<br>偷偷告訴你：<b>有些部落搬家時，把名字一起帶下山了。</b></p>
-    <div class="howto">
-      <div><b>1</b><span>看舊部落的<br>族語名</span></div>
-      <div><b>2</b><span>在地圖上找<br>名字最像的門牌</span></div>
-      <div><b>3</b><span>答錯越少，<br><em>★ 星星</em>越多</span></div>
+    <h1 id="intro-title"><span>舊部落</span><span>找新家</span></h1>
+    <p class="tagline">8 個山裡的舊部落，等你幫族人找到山下的新家</p>
+    <div class="chips"><span>🗺️ 2 關</span><span>🚩 8 站</span><span>★ 24 顆星</span></div>
+    <p class="best" id="best" hidden></p>
+    <div class="title-actions">
+      <button type="button" class="btn-start" id="start">▶ 開始遊戲</button>
+      <button type="button" class="btn-ghost" id="howto-btn">怎麼玩？</button>
     </div>
-    <button type="button" class="btn-main" id="start">出發 →</button>
   </div>
 </section>
+
+<!-- 玩法說明 -->
+<div class="modal" id="howto" hidden>
+  <section class="result" role="dialog" aria-modal="true" aria-labelledby="howto-title" style="width:min(520px,100%)">
+    <h2 id="howto-title" style="margin-top:0">怎麼玩？</h2>
+    <div class="howto">
+      <div><b>1</b><span>看舊部落的<br>族語名</span></div>
+      <div><b>2</b><span>在地圖上找<br>名字最像的村落</span></div>
+      <div><b>3</b><span>答錯越少，<br><em>★ 星星</em>越多</span></div>
+    </div>
+    <p class="lead" style="margin-top:0;text-align:left"><b>第一關</b>：名字連連看，有些部落搬家時，把名字一起帶下山了。<br><b>第二關</b>：名字對不上了，翻開村落名片當偵探。<br>每站答對，就能解鎖一張舊部落的故事卡。</p>
+    <div class="actions"><button type="button" class="btn-main" id="howto-close">知道了！</button></div>
+  </section>
+</div>
+
+<!-- 回首頁確認 -->
+<div class="modal" id="home-confirm" hidden>
+  <section class="result" role="dialog" aria-modal="true" aria-labelledby="home-title" style="width:min(400px,100%)">
+    <h2 id="home-title" style="margin-top:0">要回首頁嗎？</h2>
+    <p class="lead">回首頁後，這一輪的進度和星星會重來。</p>
+    <div class="actions"><button type="button" class="btn-ghost" id="home-cancel">繼續玩</button><button type="button" class="btn-main" id="home-ok">回首頁</button></div>
+  </section>
+</div>
 
 <!-- 第二關過場 -->
 <section class="screen" id="level2" hidden aria-labelledby="level2-title">
@@ -269,7 +359,7 @@ mark { background: #f3dcb2; color: inherit; border-radius: 3px; padding: 0 1px; 
 
 <!-- 狀態列 -->
 <header class="hud" id="hud" hidden>
-  <div class="hud-pill"><span id="round-label">第 1 站</span><div class="pips" id="pips"></div></div>
+  <div class="hud-left"><button type="button" class="home-btn" id="home-btn" aria-label="回首頁" title="回首頁">⌂</button><button type="button" class="back-btn" id="back-btn" aria-label="回上一站" title="回上一站">←<span> 上一站</span></button><div class="hud-pill"><span id="round-label">第 1 站</span><div class="pips" id="pips"></div></div></div>
   <div class="hud-pill"><span class="streak" id="streak" hidden></span><span class="score" id="score">★ 0</span></div>
 </header>
 
@@ -280,6 +370,7 @@ mark { background: #f3dcb2; color: inherit; border-radius: 3px; padding: 0 1px; 
 <div class="modal" id="story-modal" hidden></div>
 <div class="modal" id="result-modal" hidden></div>
 <div class="end-bar" id="end-bar" hidden>
+  <button type="button" class="btn-ghost" id="end-home">回首頁</button>
   <button type="button" class="btn-ghost" id="open-result">看收藏冊</button>
   <button type="button" class="btn-main" id="replay-2">再挑戰一次</button>
 </div>
@@ -329,7 +420,7 @@ let routes = {};
 const LABEL_SIDE = { 金岳村: 'left', 碧侯村: 'up', 南澳村: 'right', 東岳村: 'left' };
 
 // ─── 遊戲狀態 ───
-const state = { round: 0, stars: 0, streak: 0, wrong: 0, viewing: null, seen: new Set(), results: [], busy: false, playing: false };
+const state = { session: 0, round: 0, stars: 0, streak: 0, wrong: 0, viewing: null, seen: new Set(), results: [], busy: false, playing: false };
 
 // 找出兩個名字共同的最長片段，用來在畫面上標出「名字被帶下山」的部分
 function commonPart(a, b) {
@@ -486,6 +577,7 @@ const $ = id => document.getElementById(id);
 function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
 
 function renderHud() {
+  $('back-btn').disabled = state.round === 0 || state.round >= TRIBES.length || state.busy;
   const level = state.round < FIRST_DETECTIVE ? '第一關' : '第二關';
   $('round-label').textContent = state.round < TRIBES.length ? (isMobile() ? `第 ${state.round + 1} 站` : `${level} · 第 ${state.round + 1} 站`) : '全部抵達';
   $('pips').innerHTML = TRIBES.map((_, i) => (i === FIRST_DETECTIVE ? '<span class="gap"></span>' : '') + `<i class="${i < state.round ? 'done' : i === state.round ? 'now' : ''}"></i>`).join('');
@@ -583,6 +675,7 @@ function answer(name) {
 }
 
 async function win(t, el) {
+  const session = state.session;
   state.busy = true;
   const earned = roundStars();
   state.stars += earned; state.streak++;
@@ -595,6 +688,7 @@ async function win(t, el) {
   $('mission').hidden = true;
   renderHud();
   await walk(t);
+  if (session !== state.session) return;
   const v = VILLAGES[t.answer];
   const part = t.mode === 'name' ? commonPart(t.name, v.plate) : '';
   const arrive = $('arrive');
@@ -606,6 +700,8 @@ async function win(t, el) {
   $('score').classList.remove('bump'); void $('score').offsetWidth; $('score').classList.add('bump');
   await new Promise(r => setTimeout(r, part ? 2000 : 1500));
   arrive.hidden = true;
+  if (session !== state.session) return;
+  state.busy = false; renderHud(); state.busy = true;
   showStory(t, earned, true);
 }
 
@@ -645,6 +741,7 @@ function titleFor(s) {
 }
 function finish() {
   state.playing = false;
+  saveBest(state.stars);
   $('mission').hidden = true;
   document.body.classList.remove('playing');
   Object.values(oldMarkers).forEach(el => el.classList.remove('is-active'));
@@ -662,7 +759,7 @@ function showResult() {
     <p class="lead">南澳泰雅族人從和平溪、和平北溪一帶的山區舊部落，一步步遷到山下的村落。直到今天，族人仍會回到舊社尋根，舊部落的名字也留在村落的族語名裡。</p>
     <p class="album-title">故事收藏冊 · 點卡片再讀一次</p>
     <div class="album">${TRIBES.map(t => `<button type="button" data-key="${t.key}"><img src="photos/${t.photo}.jpg" alt=""><em>${'★'.repeat(byKey[t.key] || 0)}</em><span>${esc(t.id)}<br>→ ${esc(t.answer)}</span></button>`).join('')}</div>
-    <div class="actions"><button type="button" class="btn-ghost" id="see-map">看遷徙總覽地圖</button><button type="button" class="btn-main" id="replay">${state.stars >= 24 ? '再玩一次' : '再挑戰滿星'}</button></div>
+    <div class="actions"><button type="button" class="btn-ghost" id="result-home">回首頁</button><button type="button" class="btn-ghost" id="see-map">看遷徙總覽地圖</button><button type="button" class="btn-main" id="replay">${state.stars >= 24 ? '再玩一次' : '再挑戰滿星'}</button></div>
   </section>`;
   modal.hidden = false;
   $('end-bar').hidden = true;
@@ -671,27 +768,81 @@ function showResult() {
     modal.hidden = true;
     showStory(t, byKey[t.key], false, () => { modal.hidden = false; });
   }));
+  $('result-home').addEventListener('click', goHome);
   $('see-map').addEventListener('click', () => { modal.hidden = true; $('end-bar').hidden = false; });
   $('replay').addEventListener('click', restart);
 }
 function restart() {
+  state.session++;
   Object.assign(state, { round: 0, stars: 0, streak: 0, results: [], playing: true, busy: false, level2Shown: true });
-  Object.values(oldMarkers).forEach(el => el.classList.remove('is-solved'));
+  resetBoard();
   $('result-modal').hidden = true; $('end-bar').hidden = true;
   startRound();
 }
 
+// 最佳紀錄只存在這台裝置的瀏覽器裡，讀不到也不影響遊戲
+function readBest() { try { return Number(localStorage.getItem('nanao-game-best')) || 0; } catch (e) { return 0; } }
+function saveBest(s) { try { if (s > readBest()) localStorage.setItem('nanao-game-best', String(s)); } catch (e) {} }
+function showBest() { const b = readBest(); $('best').hidden = !b; $('best').textContent = `🏆 最佳紀錄 ★ ${b} / 24`; }
+function resetBoard() {
+  Object.values(oldMarkers).forEach(el => el.classList.remove('is-solved', 'is-active'));
+  Object.values(villageEls).forEach(el => el.classList.remove('is-wrong', 'is-correct', 'is-hint', 'is-viewing', 'is-seen'));
+  walker.remove();
+}
+function goHome() {
+  state.session++;
+  Object.assign(state, { round: 0, stars: 0, streak: 0, results: [], playing: false, busy: false, level2Shown: false, viewing: null });
+  ['mission', 'hud', 'route-legend', 'arrive', 'story-modal', 'result-modal', 'end-bar', 'level2', 'home-confirm'].forEach(id => { $(id).hidden = true; });
+  document.body.classList.remove('playing');
+  resetBoard(); setRoutes(null); fitAll(0);
+  showBest();
+  $('intro').hidden = false;
+}
 $('start').addEventListener('click', () => {
   $('intro').hidden = true; $('hud').hidden = false; $('route-legend').hidden = false;
   state.playing = true;
   startRound();
 });
+$('howto-btn').addEventListener('click', () => { $('howto').hidden = false; $('howto-close').focus(); });
+$('howto-close').addEventListener('click', () => { $('howto').hidden = true; });
+$('home-btn').addEventListener('click', () => { if (!state.playing) { goHome(); return; } $('home-confirm').hidden = false; $('home-cancel').focus(); });
+// 回上一站：把上一站（以及這一站若已答對）的成績收回，重玩上一站
+function prevRound() {
+  if (state.round === 0 || state.round >= TRIBES.length) return;
+  if (state.busy && $('story-modal').hidden) return; // 小人走路途中不能回上一站
+  state.session++;
+  const target = state.round - 1;
+  state.results = state.results.filter(r => TRIBES.findIndex(x => x.key === r.key) < target);
+  state.stars = state.results.reduce((n, r) => n + r.stars, 0);
+  state.streak = 0;
+  TRIBES.slice(target).forEach(x => oldMarkers[x.key].classList.remove('is-solved'));
+  if (target < FIRST_DETECTIVE) state.level2Shown = false;
+  ['arrive', 'story-modal', 'level2', 'home-confirm'].forEach(id => { $(id).hidden = true; });
+  walker.remove();
+  state.round = target;
+  startRound();
+}
+$('back-btn').addEventListener('click', prevRound);
+$('home-cancel').addEventListener('click', () => { $('home-confirm').hidden = true; });
+$('home-ok').addEventListener('click', goHome);
+$('end-home').addEventListener('click', goHome);
+showBest();
 $('go-level2').addEventListener('click', () => { $('level2').hidden = true; startRound(); });
 $('open-result').addEventListener('click', showResult);
 $('replay-2').addEventListener('click', restart);
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && !$('story-modal').hidden) $('story-next')?.click();
+  if (e.key !== 'Escape') return;
+  if (!$('howto').hidden) $('howto').hidden = true;
+  else if (!$('home-confirm').hidden) $('home-confirm').hidden = true;
+  else if (!$('story-modal').hidden) $('story-next')?.click();
 });
+// 手機直式畫面：改成顯示整條山路（旗子 → 村落），不要只裁中間一段
+function fitScene() {
+  const svg = document.querySelector('.scene');
+  if (innerWidth / innerHeight < .8) { svg.setAttribute('viewBox', '250 330 900 570'); svg.setAttribute('preserveAspectRatio', 'xMidYMax meet'); document.getElementById('sky-rect').style.opacity = 0; }
+  else { svg.setAttribute('viewBox', '0 0 1440 900'); svg.setAttribute('preserveAspectRatio', 'xMidYMax slice'); document.getElementById('sky-rect').style.opacity = 1; }
+}
+fitScene(); addEventListener('resize', fitScene);
 </script>
 </body>
 </html>
